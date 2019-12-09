@@ -550,11 +550,15 @@ class Geocentric(ICRF):
 
         t = self.t
         au = einsum('ij...,j...->i...', t.M, self.position.au)
+        au_per_d = einsum('ij...,j...->i...', t.M, self.velocity.au_per_d)
 
         spin = rot_z(- t.gast * tau / 24.0)
         au = einsum('ij...,j...->i...', spin, array(au))
+        au_per_d = einsum('ij...,j...->i...', spin, array(au_per_d))
+        au_per_d[0] += DAY_S * -ANGVEL * - au[1]
+        au_per_d[1] += DAY_S * -ANGVEL * au[0]
 
-        return Distance(au)
+        return Distance(au), Velocity(au_per_d)
 
     def subpoint(self):
         """Return the latitude and longitude directly beneath this position.
